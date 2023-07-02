@@ -1,6 +1,7 @@
 import { useState } from "react";
+import cards from "../cards";
 
-type CellData = { id: string; card: "basic plant" | null };
+type CellData = { id: string; card: (typeof cards)[number]["name"] | null };
 type CellRow = CellData[];
 type GridData = CellRow[];
 
@@ -9,7 +10,15 @@ function generateDefaultGridData(gridSize: number): GridData {
   for (let i = 0; i < gridSize; i++) {
     const row: CellRow = [];
     for (let j = 0; j < gridSize; j++) {
-      row.push({ id: `${i}${j}`, card: j % i === 1 ? "basic plant" : null });
+      row.push({
+        id: `${i}${j}`,
+        card:
+          j % i === 1
+            ? "Basic Plant"
+            : j % 2 === 0
+            ? "Great Oak"
+            : "Purple Rose",
+      });
     }
     data.push(row);
   }
