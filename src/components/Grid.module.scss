@@ -1,0 +1,19 @@
+.grid {
+  margin: auto;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+  width: 400px;
+  align-items: center;
+  justify-content: center;
+  .row {
+    display: flex;
+    flex-direction: row;
+    .cell {
+      width: 120px;
+      height: 150px;
+      outline: 1px solid white;
+    }
+  }
+}

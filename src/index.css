@@ -1,0 +1,8 @@
+:root {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100vh;
+  background-color: white;
+}
