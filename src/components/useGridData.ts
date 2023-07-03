@@ -1,23 +1,25 @@
+import { useStoreState } from "easy-peasy";
 import { useState } from "react";
-import cards from "../cards";
+import cards, { Card, CardName, Cards } from "../cards";
+import { StoreState } from "../stores/cardsStore";
 
-type CellData = { id: string; card: (typeof cards)[number]["name"] | null };
+type CellData = { id: string; card: StoreState["cards"][number] | null };
 type CellRow = CellData[];
 type GridData = CellRow[];
 
-function generateDefaultGridData(gridSize: number): GridData {
+function generateDefaultGridData(
+  gridSize: number,
+  cards: StoreState["cards"]
+): GridData {
   const data: GridData = [];
   for (let i = 0; i < gridSize; i++) {
     const row: CellRow = [];
     for (let j = 0; j < gridSize; j++) {
+      const id = `${i}${j}`;
+      const card = cards.find((c) => c.tileId == id);
       row.push({
-        id: `${i}${j}`,
-        card:
-          j % i === 1
-            ? "Basic Plant"
-            : j % 2 === 0
-            ? "Great Oak"
-            : "Purple Rose",
+        id,
+        card: card || null,
       });
     }
     data.push(row);
@@ -27,8 +29,9 @@ function generateDefaultGridData(gridSize: number): GridData {
 }
 
 export default function useGridData(gridSize: number) {
+  const userCards = useStoreState((state: StoreState) => state.cards);
   const [gridData, setGridData] = useState(() =>
-    generateDefaultGridData(gridSize)
+    generateDefaultGridData(gridSize, userCards)
   );
 
   function getCellById(id: string) {

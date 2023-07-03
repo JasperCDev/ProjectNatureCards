@@ -1,8 +1,8 @@
 import { Flower, LeafyGreen, TreePine } from "lucide-react";
-import cards from "../cards";
+import cards, { CardName } from "../cards";
 
 type Props = {
-  name: (typeof cards)[number]["name"];
+  name: CardName;
 };
 
 const sharedProps = {
@@ -16,6 +16,6 @@ export default function CardIcon({ name }: Props) {
     case "Great Oak":
       return <TreePine {...sharedProps} color="green" />;
     case "Purple Rose":
-      return <Flower {...sharedProps} color="pink" />;
+      return <Flower {...sharedProps} color="purple" />;
   }
 }

@@ -1,7 +1,12 @@
-import Card from "./components/Card";
+import { createStore, StoreProvider } from "easy-peasy";
 import Grid from "./components/Grid";
-// import Grid from "./components/Grid";
+import { model } from "./stores/cardsStore";
 
 export default function App() {
-  return <Grid />;
+  const store = createStore(model);
+  return (
+    <StoreProvider store={store}>
+      <Grid />
+    </StoreProvider>
+  );
 }

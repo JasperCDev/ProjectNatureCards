@@ -23,9 +23,7 @@ export default function Grid() {
                   onClick={() => handleCellClick(cell)}
                   key={cell.id}
                 >
-                  {cell.card ? (
-                    <Card card={cards.find((c) => c.name === cell.card)!} />
-                  ) : null}
+                  {cell.card ? <Card card={cell.card} /> : null}
                 </div>
               );
             })}
