@@ -1,7 +1,5 @@
-import { useStoreState } from "easy-peasy";
 import { useState } from "react";
-import cards, { Card, CardName, Cards } from "../cards";
-import { StoreState } from "../stores/cardsStore";
+import { StoreState, useStoreState } from "../stores/store";
 
 type CellData = { id: string; card: StoreState["cards"][number] | null };
 type CellRow = CellData[];
@@ -11,12 +9,14 @@ function generateDefaultGridData(
   gridSize: number,
   cards: StoreState["cards"]
 ): GridData {
+  console.log("generateDefaultGridData");
   const data: GridData = [];
   for (let i = 0; i < gridSize; i++) {
     const row: CellRow = [];
     for (let j = 0; j < gridSize; j++) {
       const id = `${i}${j}`;
       const card = cards.find((c) => c.tileId == id);
+      console.log("health ", card?.health);
       row.push({
         id,
         card: card || null,
@@ -29,8 +29,9 @@ function generateDefaultGridData(
 }
 
 export default function useGridData(gridSize: number) {
-  const userCards = useStoreState((state: StoreState) => state.cards);
-  const [gridData, setGridData] = useState(() =>
+  const userCards = useStoreState((state) => state.cards);
+
+  const [gridData, setGridData] = useState(
     generateDefaultGridData(gridSize, userCards)
   );
 

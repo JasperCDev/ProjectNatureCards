@@ -1,8 +1,8 @@
 import styles from "./Card.module.scss";
-import { Leaf, Sparkles, Heart } from "lucide-react";
-import cards, { Card } from "../cards";
+import { Sparkles, Heart } from "lucide-react";
+import { Card } from "../utils/cards";
 import CardIcon from "./CardIcon";
-import { StoreState } from "../stores/cardsStore";
+import { StoreState } from "../stores/store";
 
 type Props = {
   card: StoreState["cards"][number];

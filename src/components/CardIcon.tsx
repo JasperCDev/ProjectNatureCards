@@ -1,5 +1,5 @@
 import { Flower, LeafyGreen, TreePine } from "lucide-react";
-import cards, { CardName } from "../cards";
+import { CardName } from "../utils/cards";
 
 type Props = {
   name: CardName;
