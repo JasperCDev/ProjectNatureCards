@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { StoreState, useStoreState } from "../stores/store";
 
-type CellData = { id: string; card: StoreState["cards"][number] | null };
+type CellData = { id: string; card: StoreState["cardsInPlay"][number] | null };
 type CellRow = CellData[];
 type GridData = CellRow[];
 
 function generateDefaultGridData(
   gridSize: number,
-  cards: StoreState["cards"]
+  cards: StoreState["cardsInPlay"]
 ): GridData {
   console.log("generateDefaultGridData");
   const data: GridData = [];
@@ -29,7 +29,7 @@ function generateDefaultGridData(
 }
 
 export default function useGridData(gridSize: number) {
-  const userCards = useStoreState((state) => state.cards);
+  const userCards = useStoreState((state) => state.cardsInPlay);
 
   const [gridData, setGridData] = useState(
     generateDefaultGridData(gridSize, userCards)
