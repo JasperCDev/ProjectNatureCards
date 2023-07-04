@@ -134,6 +134,7 @@ export const model: Model = {
     state.frameCount++;
   }),
   addRandomCard: action((state) => {
+    state.playerCurrency -= 5;
     const randomCardIndx = Math.floor(Math.random() * 3);
     const cardNames = ["Basic Plant", "Purple Rose", "Great Oak"] as const;
     const randomCardName = cardNames[randomCardIndx];

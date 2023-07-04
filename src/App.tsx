@@ -12,6 +12,7 @@ export default function App() {
   const addRandomCard = useStoreActions((actions) => actions.addRandomCard);
 
   function onCardPurchase() {
+    if (playerCurrency < 5) return;
     addRandomCard();
   }
 
@@ -35,6 +36,7 @@ export default function App() {
           onClick={onCardPurchase}
         >
           <h2>Purchase a Card!</h2>
+          <h3>5 coins</h3>
         </div>
       </div>
       <div
