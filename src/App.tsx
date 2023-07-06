@@ -3,17 +3,30 @@ import { useStoreState, useStoreActions } from "./stores/store";
 import CardsInHand from "./components/CardsInHand";
 
 import useGameLoop from "./utils/useGameLoop";
+import { Sword } from "lucide-react";
+import cards, { CardName } from "./utils/cards";
+import CardIcon from "./components/CardIcon";
 
 export default function App() {
   useGameLoop();
   const partOfDay = useStoreState((state) => state.partOfDay);
+  const dayCount = useStoreState((state) => state.dayCount);
+  const cardsPurchased = useStoreState((state) => state.cardsPurchased);
   const playerCurrency = useStoreState((state) => state.playerCurrency);
+  const playerAction = useStoreState((state) => state.playerAction);
   const endTurn = useStoreActions((actions) => actions.endTurn);
-  const addRandomCard = useStoreActions((actions) => actions.addRandomCard);
+  const buyCard = useStoreActions((actions) => actions.buyCard);
+  const updatePlayerAction = useStoreActions(
+    (actions) => actions.updatePlayerAction
+  );
 
-  function onCardPurchase() {
-    if (playerCurrency < 5) return;
-    addRandomCard();
+  function onCardPurchase(card: (typeof cards)[CardName], price: number) {
+    if (playerCurrency < card.price * 1.03 ** cardsPurchased) return;
+    buyCard({ card, price });
+  }
+
+  function handleSwordClick() {
+    updatePlayerAction(playerAction === "killing card" ? null : "killing card");
   }
 
   return (
@@ -26,18 +39,31 @@ export default function App() {
       }}
     >
       <div style={{ width: "100%" }}>
-        <div
-          style={{
-            border: "1px solid black",
-            width: "120px",
-            height: "150px",
-            padding: "1rem",
-          }}
-          onClick={onCardPurchase}
-        >
-          <h2>Purchase a Card!</h2>
-          <h3>5 coins</h3>
-        </div>
+        {Object.values(cards).map((card) => {
+          const cardPrice = Math.floor(card.price * 1.1 ** cardsPurchased);
+          return (
+            <div
+              style={{
+                border: "1px solid black",
+                width: "120px",
+                height: "180px",
+                padding: "1rem",
+                cursor: "pointer",
+              }}
+              onClick={() => onCardPurchase(card, cardPrice)}
+            >
+              <h2>Purchase {card.name}</h2>
+              <CardIcon name={card.name} />
+              <h3
+                style={{
+                  color: playerCurrency < cardPrice ? "red" : "inherit",
+                }}
+              >
+                {cardPrice} coins
+              </h3>
+            </div>
+          );
+        })}
       </div>
       <div
         style={{
@@ -47,7 +73,9 @@ export default function App() {
           justifyContent: "space-between",
         }}
       >
-        <h1 style={{ textTransform: "uppercase" }}>{partOfDay}</h1>
+        <h1 style={{ textTransform: "uppercase" }}>
+          {partOfDay} Day {dayCount}
+        </h1>
         <Grid />
         <div>
           <h2>PLAYER HAS {playerCurrency} COINS</h2>
@@ -58,6 +86,15 @@ export default function App() {
       </div>
       <div style={{ width: "100%" }}>
         <CardsInHand />
+        <Sword
+          size={playerAction === "killing card" ? 56 : 48}
+          style={{
+            fill: playerAction === "killing card" ? "red" : "grey",
+            border:
+              playerAction === "killing card" ? "3px solid crimson" : "none",
+          }}
+          onClick={handleSwordClick}
+        />
       </div>
     </div>
   );

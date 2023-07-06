@@ -9,7 +9,7 @@ import {
   State,
 } from "easy-peasy";
 import CardsInHand from "../components/CardsInHand";
-import cards, { CardName } from "../utils/cards";
+import cards, { CardAbility, CardName } from "../utils/cards";
 
 const partsOfDay = ["morning", "noon", "afternoon", "midnight"] as const;
 
@@ -25,6 +25,7 @@ export type Card = {
   name: CardName;
   power: number;
   health: number;
+  ability: CardAbility | null;
 };
 
 export type CardInPlay = Card & { tileId: string };
@@ -32,7 +33,10 @@ export type CardsInPlay = CardInPlay[];
 export type CardInHand = Card;
 export type CardsInHand = CardInHand[];
 
+export type PlayerAction = "placing card" | "killing card" | null;
+
 export type Model = {
+  dayCount: number;
   latestCardId: number;
   gridData: Computed<Model, GridData>;
   cardsInPlay: CardsInPlay;
@@ -43,6 +47,10 @@ export type Model = {
     Model,
     { cardId: CardsInHand[number]["id"]; cellId: CellData["id"] }
   >;
+  cardsPurchased: number;
+  playerAction: PlayerAction;
+  updatePlayerAction: Action<Model, PlayerAction>;
+  killCard: Action<Model, CardsInPlay[number]["id"]>;
   gridSize: number;
   partOfDay: (typeof partsOfDay)[number];
   playerCurrency: number;
@@ -50,7 +58,7 @@ export type Model = {
   frameCount: number;
   incrementFrameCount: Action<Model>;
   endTurn: Action<Model>;
-  addRandomCard: Action<Model>;
+  buyCard: Action<Model, { card: (typeof cards)[CardName]; price: number }>;
 };
 
 export type StoreState = State<Model>;
@@ -60,8 +68,10 @@ export const { useStore, useStoreActions, useStoreState } =
   createTypedHooks<Model>();
 
 export const model: Model = {
-  latestCardId: 3,
-  gridSize: 3,
+  dayCount: 1,
+  latestCardId: 4,
+  gridSize: 4,
+  cardsPurchased: 0,
   gridData: computed((state) => {
     const data: GridData = [];
     for (let i = 0; i < state.gridSize; i++) {
@@ -78,33 +88,29 @@ export const model: Model = {
     }
     return data;
   }),
-  cardsInPlay: [
-    {
-      id: 1,
-      tileId: "00",
-      name: "Basic Plant" as const,
-      power: cards["Basic Plant"].power,
-      health: cards["Basic Plant"].lifespan,
-    },
-    {
-      id: 2,
-      tileId: "11",
-      name: "Great Oak" as const,
-      power: cards["Great Oak"].power,
-      health: cards["Great Oak"].lifespan,
-    },
-    {
-      id: 3,
-      tileId: "22",
-      name: "Purple Rose" as const,
-      power: cards["Purple Rose"].power,
-      health: cards["Purple Rose"].lifespan,
-    },
-  ],
+  cardsInPlay: [],
   cardsInHand: [],
   cardSelected: null,
   selectCard: action((state, cardId) => {
+    state.playerAction = "placing card";
     state.cardSelected = cardId;
+  }),
+  playerAction: null,
+  updatePlayerAction: action((state, playerAction) => {
+    state.playerAction = playerAction;
+  }),
+  killCard: action((state, cardId) => {
+    let cardIndx = -1;
+    const card = state.cardsInPlay.find((card, indx) => {
+      const found = card.id === cardId;
+      if (found) {
+        cardIndx = indx;
+      }
+      return found;
+    });
+    if (!card) throw Error();
+    state.cardsInPlay.splice(cardIndx, 1);
+    state.playerCurrency += Math.ceil((card.health + card.power) / 3);
   }),
   placeCard: action((state, payload) => {
     let cardIndx = -1;
@@ -125,7 +131,7 @@ export const model: Model = {
     state.cardsInPlay.push(playedCard);
   }),
   partOfDay: "morning" as const,
-  playerCurrency: 0,
+  playerCurrency: 20,
   updateCurrency: action((state, payload) => {
     state.playerCurrency = state.playerCurrency + payload;
   }),
@@ -133,21 +139,24 @@ export const model: Model = {
   incrementFrameCount: action((state) => {
     state.frameCount++;
   }),
-  addRandomCard: action((state) => {
-    state.playerCurrency -= 5;
-    const randomCardIndx = Math.floor(Math.random() * 3);
-    const cardNames = ["Basic Plant", "Purple Rose", "Great Oak"] as const;
-    const randomCardName = cardNames[randomCardIndx];
-    const randomCard = cards[randomCardName];
-    const formattedCard = {
+  buyCard: action((state, { card, price }) => {
+    state.playerCurrency -= price;
+
+    const newCard = {
       id: state.latestCardId + 1,
-      name: randomCard.name,
-      health: randomCard.lifespan,
-      power: randomCard.power,
+      name: card.name,
+      health: card.lifespan,
+      power: card.power,
+      ability: card.ability,
     };
-    state.cardsInHand.push(formattedCard);
+    state.latestCardId++;
+    state.cardsInHand.push(newCard);
+    state.cardsPurchased++;
   }),
   endTurn: action((state) => {
+    if (state.partOfDay === "midnight") {
+      state.dayCount++;
+    }
     const partOfDayIndx = partsOfDay.indexOf(state.partOfDay);
     const newIndx =
       partOfDayIndx === partsOfDay.length - 1 ? 0 : partOfDayIndx + 1;
@@ -155,10 +164,43 @@ export const model: Model = {
 
     const damagedCards = state.cardsInPlay.map((card) => {
       state.playerCurrency += card.power;
-      return {
-        ...card,
-        health: card.health - 1,
+      function indexCard(gridData: GridData, i1: number, i2: number) {
+        const row = gridData[i1];
+        if (typeof row === "undefined") {
+          return null;
+        }
+        const cell = row[i2];
+        if (typeof cell === "undefined") {
+          return null;
+        }
+        const card = cell.card;
+        if (card === null) {
+          return null;
+        }
+
+        return card;
+      }
+      const [i, j] = card.tileId.split("").map((v) => Number(v));
+      const adjacentCards = {
+        above: indexCard(state.gridData, i - 1, j),
+        below: indexCard(state.gridData, i + 1, j),
+        left: indexCard(state.gridData, i, j - 1),
+        right: indexCard(state.gridData, i, j + 1),
       };
+
+      const adjacentCardIsSprinkler = Object.values(adjacentCards).findIndex(
+        (c) => c?.ability === "sprinkler"
+      );
+
+      const adjustedCard = {
+        ...card,
+      };
+
+      if (adjacentCardIsSprinkler === -1) {
+        adjustedCard.health -= 1;
+      }
+
+      return adjustedCard;
     });
     const aliveCards = damagedCards.filter((card) => {
       return card.health > 0;
