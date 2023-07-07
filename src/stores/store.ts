@@ -142,7 +142,6 @@ export const model: Model = {
   }),
   buyCard: action((state, { card, price }) => {
     state.playerCurrency -= price;
-
     const newCard = {
       id: state.latestCardId + 1,
       name: card.name,
