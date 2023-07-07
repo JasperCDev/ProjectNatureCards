@@ -24,15 +24,19 @@ export default function Card({ card, onClick, className }: Props) {
         <CardIcon name={card.name} />
       </div>
       <div className={styles.attributes}>
-        <div className={styles.power}>
-          <span className={styles.powerValue}>{card.power}</span>
-          {"  "}
-          <Sparkles className={styles.powerIcon} />
-        </div>
-        <div className={styles.health}>
-          <span className={styles.healthValue}>{card.health}</span>{" "}
-          <Heart className={styles.healthIcon} />
-        </div>
+        {card.power !== -1 ? (
+          <div className={styles.power}>
+            <span className={styles.powerValue}>{card.power}</span>
+            {"  "}
+            <Sparkles className={styles.powerIcon} />
+          </div>
+        ) : null}
+        {card.health !== -1 ? (
+          <div className={styles.health}>
+            <span className={styles.healthValue}>{card.health}</span>{" "}
+            <Heart className={styles.healthIcon} />
+          </div>
+        ) : null}
       </div>
     </div>
   );

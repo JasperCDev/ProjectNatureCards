@@ -24,9 +24,9 @@ export default function CardsInHand() {
   const cardsInHand = useStoreState((state) => state.cardsInHand);
   return (
     <div className={styles.cardsInHand}>
-      {cardsInHand.map((card) => (
-        <CardInHand key={card.id} card={card} />
-      ))}
+      {cardsInHand.map((card) => {
+        return <CardInHand key={card.id} card={card} />;
+      })}
     </div>
   );
 }

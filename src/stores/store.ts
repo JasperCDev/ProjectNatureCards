@@ -25,7 +25,8 @@ export type Card = {
   name: CardName;
   power: number;
   health: number;
-  ability: CardAbility | null;
+  ability: CardAbility;
+  turnCount: number;
 };
 
 export type CardInPlay = Card & { tileId: string };
@@ -70,7 +71,7 @@ export const { useStore, useStoreActions, useStoreState } =
 export const model: Model = {
   dayCount: 1,
   latestCardId: 4,
-  gridSize: 4,
+  gridSize: 5,
   cardsPurchased: 0,
   gridData: computed((state) => {
     const data: GridData = [];
@@ -110,7 +111,7 @@ export const model: Model = {
     });
     if (!card) throw Error();
     state.cardsInPlay.splice(cardIndx, 1);
-    state.playerCurrency += Math.ceil((card.health + card.power) / 3);
+    state.playerCurrency += cards[card.name].price || 0;
   }),
   placeCard: action((state, payload) => {
     let cardIndx = -1;
@@ -148,6 +149,7 @@ export const model: Model = {
       health: card.lifespan,
       power: card.power,
       ability: card.ability,
+      turnCount: 0,
     };
     state.latestCardId++;
     state.cardsInHand.push(newCard);
@@ -165,7 +167,9 @@ export const model: Model = {
     state.partOfDay = partsOfDay[newIndx];
 
     const damagedCards = state.cardsInPlay.map((card) => {
-      state.playerCurrency += card.power;
+      if (card.power !== -1) {
+        state.playerCurrency += card.power;
+      }
       function indexCard(gridData: GridData, i1: number, i2: number) {
         const row = gridData[i1];
         if (typeof row === "undefined") {
@@ -190,23 +194,37 @@ export const model: Model = {
         right: indexCard(state.gridData, i, j + 1),
       };
 
-      const adjacentCardIsSprinkler = Object.values(adjacentCards).findIndex(
-        (c) => c?.ability === "sprinkler"
-      );
+      const adjacentCardIsSprinkler =
+        Object.values(adjacentCards).findIndex(
+          (c) => c?.ability === "sprinkler"
+        ) !== -1;
 
       const adjustedCard = {
         ...card,
+        turnCount: card.turnCount + 1,
       };
 
-      if (adjacentCardIsSprinkler != -1) {
-        adjustedCard.health += 1;
+      if (adjustedCard.ability === "growth" && adjustedCard.turnCount === 10) {
+        adjustedCard.ability = null;
+        adjustedCard.health = cards["Great Oak"].lifespan;
+        adjustedCard.name = cards["Great Oak"].name;
+        adjustedCard.power = cards["Great Oak"].power;
       }
 
-      adjustedCard.health -= Math.max(Math.floor(state.dayCount / 2), 1);
+      if (adjustedCard.health === -1) {
+        return adjustedCard;
+      }
+
+      if (!adjacentCardIsSprinkler) {
+        adjustedCard.health -= 1;
+      }
 
       return adjustedCard;
     });
     const aliveCards = damagedCards.filter((card) => {
+      if (card.health === -1) {
+        return true;
+      }
       return card.health > 0;
     });
 

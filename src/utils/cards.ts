@@ -8,8 +8,8 @@ const cards = {
     ability: null,
     price: 3,
   },
-  "Great Oak": {
-    name: "Great Oak",
+  "Berry Bush": {
+    name: "Berry Bush",
     id: 2,
     power: 1,
     lifespan: 6,
@@ -29,11 +29,28 @@ const cards = {
   Sprinkler: {
     name: "Sprinkler",
     id: 4,
-    power: 0,
+    power: -1,
     lifespan: 3,
     type: "building",
     ability: "sprinkler",
     price: 10,
+  },
+  Sapling: {
+    name: "Sapling",
+    id: 5,
+    power: -1,
+    lifespan: -1,
+    type: "plant",
+    ability: "growth",
+    price: 10,
+  },
+  "Great Oak": {
+    name: "Great Oak",
+    id: 6,
+    power: 2,
+    lifespan: 99,
+    ability: null,
+    price: -1,
   },
 } as const;
 
