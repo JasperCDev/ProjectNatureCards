@@ -1,18 +1,21 @@
 .grid {
   margin: auto;
-  background-color: black;
+  background-color: #dbffba;
   display: flex;
   flex-direction: column;
-  height: 666.67px;
-  width: 533.33px;
+  height: 700px;
+  width: 600px;
   align-items: center;
   justify-content: center;
   .row {
     display: flex;
     flex-direction: row;
     .cell {
-      width: 120px;
-      height: 150px;
+      .cellCard {
+        background-color: #cfa767;
+      }
+      width: 150px;
+      height: 175px;
       outline: 1px solid white;
     }
   }

@@ -21,7 +21,7 @@ export default function App() {
   );
 
   function onCardPurchase(card: (typeof cards)[CardName], price: number) {
-    if (playerCurrency < card.price * 1.03 ** cardsPurchased) return;
+    if (playerCurrency < card.price) return;
     buyCard({ card, price });
   }
 
@@ -40,15 +40,20 @@ export default function App() {
     >
       <div style={{ width: "100%" }}>
         {Object.values(cards).map((card) => {
-          const cardPrice = Math.floor(card.price * 1.1 ** cardsPurchased);
+          const cardPrice = card.price;
           return (
             <div
               style={{
-                border: "1px solid black",
-                width: "120px",
-                height: "180px",
-                padding: "1rem",
+                width: "150px",
+                height: "175px",
+                padding: "0.5rem",
                 cursor: "pointer",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "column",
+                margin: "0.1rem",
+                boxShadow: "0 3px 10px rgb(0 0 0 / 0.2)",
               }}
               onClick={() => onCardPurchase(card, cardPrice)}
             >

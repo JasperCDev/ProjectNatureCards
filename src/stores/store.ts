@@ -152,6 +152,8 @@ export const model: Model = {
     state.latestCardId++;
     state.cardsInHand.push(newCard);
     state.cardsPurchased++;
+    state.cardSelected = newCard.id;
+    state.playerAction = "placing card";
   }),
   endTurn: action((state) => {
     if (state.partOfDay === "midnight") {
@@ -196,9 +198,11 @@ export const model: Model = {
         ...card,
       };
 
-      if (adjacentCardIsSprinkler === -1) {
-        adjustedCard.health -= 1;
+      if (adjacentCardIsSprinkler != -1) {
+        adjustedCard.health += 1;
       }
+
+      adjustedCard.health -= Math.max(Math.floor(state.dayCount / 2), 1);
 
       return adjustedCard;
     });

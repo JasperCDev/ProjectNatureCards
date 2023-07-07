@@ -1,16 +1,18 @@
 .card {
-  border: 1px solid red;
-  border-radius: 5%;
-  width: 90%;
-  height: 90%;
-  padding: 0.2rem;
-  margin: 0.2rem;
+  opacity: 0;
+  animation: fade-in 1s linear forwards;
+  padding: 0.5rem;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.2);
   display: flex;
+  border-radius: 5%;
   flex-direction: column;
-  color: white;
+  margin: 0;
+  height: 90%;
   .title {
-    font-size: 1rem;
+    font-size: 1.3rem;
+    font-weight: 900;
     margin-top: 0;
+    text-transform: uppercase;
   }
   .face {
     display: flex;
@@ -37,19 +39,27 @@
         font-size: 1.5rem;
       }
       .powerIcon {
+        fill: darkorchid;
         padding-left: 0.2rem;
       }
     }
     .health {
       display: flex;
       align-items: center;
-      color: red;
+      color: crimson;
       .healthValue {
         font-size: 1.5rem;
       }
       .healthIcon {
+        fill: crimson;
         padding-left: 0.2rem;
       }
     }
+  }
+}
+
+@keyframes fade-in {
+  100% {
+    opacity: 1;
   }
 }
