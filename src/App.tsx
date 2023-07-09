@@ -7,7 +7,6 @@ import Main from "./components/Main";
 
 export default function App() {
   useGameLoop();
-
   return (
     <>
       <DayNightCycle />

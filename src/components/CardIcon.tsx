@@ -1,5 +1,6 @@
 import {
   Droplet,
+  Flame,
   Flower,
   LeafyGreen,
   Shrub,
@@ -30,5 +31,7 @@ export default function CardIcon({ name }: Props) {
       return <Shrub {...sharedProps} color="green" />;
     case "Sapling":
       return <Sprout {...sharedProps} color="chocolate" />;
+    case "Eternal Flame":
+      return <Flame {...sharedProps} color="red" />;
   }
 }

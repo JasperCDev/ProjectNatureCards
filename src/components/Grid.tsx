@@ -41,7 +41,11 @@ export default function Grid() {
                   key={cell.id}
                 >
                   {cell.card ? (
-                    <Card className={styles.cellCard} card={cell.card} />
+                    <Card
+                      className={styles.cellCard}
+                      cell={cell}
+                      card={cell.card}
+                    />
                   ) : null}
                 </div>
               );

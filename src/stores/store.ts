@@ -16,6 +16,7 @@ const partsOfDay = ["morning", "noon", "afternoon", "midnight"] as const;
 export type CellData = {
   id: string;
   card: StoreState["cardsInPlay"][number] | null;
+  effects: Array<CardAbility>;
 };
 export type CellRow = CellData[];
 export type GridData = CellRow[];
@@ -49,6 +50,8 @@ export type Model = {
     { cardId: CardsInHand[number]["id"]; cellId: CellData["id"] }
   >;
   cardsPurchased: number;
+  buildingsPurchased: number;
+  plantsPurchased: number;
   playerAction: PlayerAction;
   updatePlayerAction: Action<Model, PlayerAction>;
   killCard: Action<Model, CardsInPlay[number]["id"]>;
@@ -70,9 +73,11 @@ export const { useStore, useStoreActions, useStoreState } =
 
 export const model: Model = {
   dayCount: 1,
-  latestCardId: 4,
+  latestCardId: 1,
   gridSize: 5,
   cardsPurchased: 0,
+  plantsPurchased: 0,
+  buildingsPurchased: 0,
   gridData: computed((state) => {
     const data: GridData = [];
     for (let i = 0; i < state.gridSize; i++) {
@@ -83,14 +88,61 @@ export const model: Model = {
         row.push({
           id,
           card: card || null,
+          effects: [],
         });
       }
       data.push(row);
     }
+    state.cardsInPlay.forEach((card) => {
+      const ability = card?.ability;
+      function getGridTile(i1: number, i2: number) {
+        const row = data[i1];
+        if (typeof row === "undefined") {
+          return null;
+        }
+        const cell = row[i2];
+        if (typeof cell === "undefined") {
+          return null;
+        }
+        return cell;
+      }
+      if (!ability) {
+        return;
+      }
+      const [i, j] = card.tileId.split("").map((v) => Number(v));
+      const adjacentCards = {
+        above: getGridTile(i - 1, j),
+        below: getGridTile(i + 1, j),
+        left: getGridTile(i, j - 1),
+        right: getGridTile(i, j + 1),
+      };
+      if (adjacentCards.above) {
+        adjacentCards.above.effects.push(ability);
+      }
+      if (adjacentCards.below) {
+        adjacentCards.below.effects.push(ability);
+      }
+      if (adjacentCards.left) {
+        adjacentCards.left.effects.push(ability);
+      }
+      if (adjacentCards.right) {
+        adjacentCards.right.effects.push(ability);
+      }
+    });
+
     return data;
   }),
   cardsInPlay: [],
-  cardsInHand: [],
+  cardsInHand: [
+    {
+      id: 1,
+      name: "Great Oak",
+      health: cards["Great Oak"].lifespan,
+      power: cards["Great Oak"].power,
+      ability: null,
+      turnCount: 0,
+    },
+  ],
   cardSelected: null,
   selectCard: action((state, cardId) => {
     state.playerAction = "placing card";
@@ -130,6 +182,9 @@ export const model: Model = {
       tileId: payload.cellId,
     };
     state.cardsInPlay.push(playedCard);
+    if (state.cardsInHand.length > 0) {
+      state.cardSelected = state.cardsInHand[0].id;
+    }
   }),
   partOfDay: "morning" as const,
   playerCurrency: 20,
@@ -150,9 +205,15 @@ export const model: Model = {
       ability: card.ability,
       turnCount: 0,
     };
+    if (card.type === "plant") {
+      state.plantsPurchased++;
+    }
+    if (card.type === "building") {
+      state.buildingsPurchased++;
+    }
+    state.cardsPurchased++;
     state.latestCardId++;
     state.cardsInHand.push(newCard);
-    state.cardsPurchased++;
     state.cardSelected = newCard.id;
     state.playerAction = "placing card";
   }),
@@ -166,37 +227,14 @@ export const model: Model = {
     state.partOfDay = partsOfDay[newIndx];
 
     const damagedCards = state.cardsInPlay.map((card) => {
-      if (card.power !== -1) {
-        state.playerCurrency += card.power;
-      }
-      function indexCard(gridData: GridData, i1: number, i2: number) {
-        const row = gridData[i1];
-        if (typeof row === "undefined") {
-          return null;
-        }
-        const cell = row[i2];
-        if (typeof cell === "undefined") {
-          return null;
-        }
-        const card = cell.card;
-        if (card === null) {
-          return null;
-        }
-
-        return card;
-      }
       const [i, j] = card.tileId.split("").map((v) => Number(v));
-      const adjacentCards = {
-        above: indexCard(state.gridData, i - 1, j),
-        below: indexCard(state.gridData, i + 1, j),
-        left: indexCard(state.gridData, i, j - 1),
-        right: indexCard(state.gridData, i, j + 1),
-      };
-
-      const adjacentCardIsSprinkler =
-        Object.values(adjacentCards).findIndex(
-          (c) => c?.ability === "sprinkler"
-        ) !== -1;
+      const cell = state.gridData[i][j];
+      if (card.power !== -1) {
+        const power = cell.effects.includes("fire")
+          ? card.power * 2
+          : card.power;
+        state.playerCurrency += power;
+      }
 
       const adjustedCard = {
         ...card,
@@ -213,8 +251,7 @@ export const model: Model = {
       if (adjustedCard.health === -1) {
         return adjustedCard;
       }
-
-      if (!adjacentCardIsSprinkler) {
+      if (!cell.effects.includes("sprinkler")) {
         adjustedCard.health -= 1;
       }
 

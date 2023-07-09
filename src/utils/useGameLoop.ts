@@ -7,7 +7,7 @@ export default function useGameLoop() {
   );
   useEffect(() => {
     const loop: FrameRequestCallback = () => {
-      incrementFrameCount();
+      // incrementFrameCount();
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
