@@ -1,0 +1,9 @@
+.cardToBuy {
+  width: 200px;
+  height: 200px;
+  transition: transform 0.2s;
+  margin: 1rem;
+  &:hover {
+    transform: scale(1.2);
+  }
+}

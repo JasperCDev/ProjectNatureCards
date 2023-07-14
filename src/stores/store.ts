@@ -28,6 +28,7 @@ export type Card = {
   health: number;
   ability: CardAbility;
   turnCount: number;
+  boughtFor: number;
 };
 
 export type CardInPlay = Card & { tileId: string };
@@ -38,7 +39,10 @@ export type CardsInHand = CardInHand[];
 export type PlayerAction = "placing card" | "killing card" | null;
 
 export type Model = {
+  gameOver: boolean;
   dayCount: number;
+  turnCount: number;
+  rent: Computed<Model, number>;
   latestCardId: number;
   gridData: Computed<Model, GridData>;
   cardsInPlay: CardsInPlay;
@@ -72,6 +76,9 @@ export const { useStore, useStoreActions, useStoreState } =
   createTypedHooks<Model>();
 
 export const model: Model = {
+  gameOver: false,
+  rent: computed((state) => Math.floor(2 * 1.1 ** state.turnCount)),
+  turnCount: 0,
   dayCount: 1,
   latestCardId: 1,
   gridSize: 5,
@@ -140,6 +147,7 @@ export const model: Model = {
       health: cards["Great Oak"].lifespan,
       power: cards["Great Oak"].power,
       ability: null,
+      boughtFor: 0,
       turnCount: 0,
     },
   ],
@@ -163,7 +171,7 @@ export const model: Model = {
     });
     if (!card) throw Error();
     state.cardsInPlay.splice(cardIndx, 1);
-    state.playerCurrency += cards[card.name].price || 0;
+    state.playerCurrency += Math.floor(card.boughtFor / 2);
   }),
   placeCard: action((state, payload) => {
     let cardIndx = -1;
@@ -187,7 +195,7 @@ export const model: Model = {
     }
   }),
   partOfDay: "morning" as const,
-  playerCurrency: 20,
+  playerCurrency: 10,
   updateCurrency: action((state, payload) => {
     state.playerCurrency = state.playerCurrency + payload;
   }),
@@ -204,6 +212,7 @@ export const model: Model = {
       power: card.power,
       ability: card.ability,
       turnCount: 0,
+      boughtFor: price,
     };
     if (card.type === "plant") {
       state.plantsPurchased++;
@@ -218,6 +227,7 @@ export const model: Model = {
     state.playerAction = "placing card";
   }),
   endTurn: action((state) => {
+    state.turnCount++;
     if (state.partOfDay === "midnight") {
       state.dayCount++;
     }
@@ -265,6 +275,10 @@ export const model: Model = {
     });
 
     state.cardsInPlay = aliveCards;
+    state.playerCurrency = Math.max(state.playerCurrency - state.rent, 0);
+    if (state.playerCurrency === 0) {
+      state.gameOver = true;
+    }
   }),
 };
 

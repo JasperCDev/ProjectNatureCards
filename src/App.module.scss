@@ -3,5 +3,24 @@
   flex-direction: row;
   align-items: center;
   height: 90vh;
+}
+
+.gameOver {
   z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: white;
+  h1 {
+    font-size: 64px;
+  }
+  h2 {
+    font-size: 36px;
+  }
 }

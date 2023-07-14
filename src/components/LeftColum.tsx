@@ -1,93 +1,118 @@
 import { Leaf } from "lucide-react";
+import { useState } from "react";
 import { useStoreActions, useStoreState } from "../stores/store";
-import cards from "../utils/cards";
+import cards, { CardName } from "../utils/cards";
+import styles from "./LeftColumn.module.scss";
+import Card from "./Card";
+import Dialog from "./Dialog";
+
+function getRandomCards() {
+  const cardNames = Object.values(cards)
+    .filter((c) => c.purchasable)
+    .map((c) => c.name);
+
+  const randomCardNames: Array<CardName> = [];
+  for (let i = 0; i < 3; i++) {
+    const randomIndx = Math.floor(Math.random() * cardNames.length);
+    randomCardNames.push(cardNames[randomIndx]);
+    cardNames.splice(randomIndx, 0);
+  }
+  return randomCardNames.map((name) => cards[name]);
+}
 
 export default function LeftColumn() {
   const playerCurrency = useStoreState((state) => state.playerCurrency);
   const buyCard = useStoreActions((actions) => actions.buyCard);
-  const plantsPurchased = useStoreState((state) => state.plantsPurchased);
-  const buildingsPurchased = useStoreState((state) => state.buildingsPurchased);
-  const plantPrice = Math.floor(5 + 1 * plantsPurchased);
-  const buildingPrice = Math.floor(25 + 5 * buildingsPurchased);
+  const cardsPurchased = useStoreState((state) => state.cardsPurchased);
+  const cardPrice = Math.floor(5 * 1.2 ** cardsPurchased);
+  const [cardsToBuy, setCardsToBuy] = useState<(typeof cards)[CardName][]>([]);
 
-  function onPlantPurchase() {
-    if (playerCurrency < plantPrice) {
+  const [pickingCard, setPickingCard] = useState(false);
+
+  function openCardPack() {
+    if (playerCurrency < cardPrice) {
       return;
     }
-    const includedCards = Object.values(cards).filter(
-      (c) => c.price !== -1 && c.type === "plant"
-    );
-    const randomIndx = Math.floor(Math.random() * includedCards.length);
-    const randomCard = includedCards[randomIndx];
-    buyCard({ card: randomCard, price: plantPrice });
+
+    setCardsToBuy(getRandomCards());
+    setPickingCard(true);
   }
 
-  function onBuildingPurchase() {
-    if (playerCurrency < buildingPrice) {
+  function pickCard(card: (typeof cards)[CardName]) {
+    if (playerCurrency < cardPrice) {
       return;
     }
-    const includedCards = Object.values(cards).filter(
-      (c) => c.price !== -1 && c.type === "building"
-    );
-    const randomIndx = Math.floor(Math.random() * includedCards.length);
-    const randomCard = includedCards[randomIndx];
-    buyCard({ card: randomCard, price: buildingPrice });
+
+    buyCard({ card, price: cardPrice });
+    setCardsToBuy([]);
+    setPickingCard(false);
   }
 
   return (
     <div style={{ width: "100%" }}>
-      <div
-        style={{
-          width: "150px",
-          height: "175px",
-          padding: "0.5rem",
-          cursor: "pointer",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          margin: "0.1rem",
-          boxShadow: "0 3px 10px rgb(0 0 0 / 0.2)",
-        }}
-        onClick={() => onPlantPurchase()}
+      <Dialog
+        open={pickingCard}
+        setOpen={setPickingCard}
+        trigger={
+          <div
+            style={{
+              width: "150px",
+              height: "175px",
+              padding: "0.5rem",
+              cursor: "pointer",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "column",
+              margin: "0.1rem",
+              boxShadow: "0 3px 10px rgb(0 0 0 / 0.2)",
+            }}
+            onClick={() => openCardPack()}
+          >
+            <h2 style={{ margin: 0 }}>Purchase Card</h2>
+            <Leaf size={100} color="green" fill="lightgreen" />
+            <h3
+              style={{
+                color: playerCurrency < cardPrice ? "red" : "inherit",
+                fontSize: "1rem",
+              }}
+            >
+              {cardPrice} coins
+            </h3>
+          </div>
+        }
       >
-        <h2 style={{ margin: 0 }}>Purchase Plant</h2>
-        <Leaf size={100} color="green" fill="lightgreen" />
-        <h3
+        <div
           style={{
-            color: playerCurrency < plantPrice ? "red" : "inherit",
-            fontSize: "1rem",
+            display: "flex",
+            flexDirection: "column",
+            // width: "100%",
+            height: "500px",
+            // justifyContent: "space-between",
+            alignItems: "center",
+            // margin: "5rem",
           }}
         >
-          {plantPrice} coins
-        </h3>
-      </div>
-      <div
-        style={{
-          width: "150px",
-          height: "175px",
-          padding: "0.5rem",
-          cursor: "pointer",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          margin: "0.1rem",
-          boxShadow: "0 3px 10px rgb(0 0 0 / 0.2)",
-        }}
-        onClick={() => onBuildingPurchase()}
-      >
-        <h2 style={{ margin: 0 }}>Purchase Building</h2>
-        <Leaf size={100} color="green" fill="lightgreen" />
-        <h3
-          style={{
-            color: playerCurrency < buildingPrice ? "red" : "inherit",
-            fontSize: "1rem",
-          }}
-        >
-          {buildingPrice} coins
-        </h3>
-      </div>
+          <h1 style={{ fontSize: "4rem", marginTop: "0" }}>Pick A Card</h1>
+          <div style={{ display: "flex", height: "100%" }}>
+            {cardsToBuy.map((card) => {
+              return (
+                <div className={styles.cardToBuy}>
+                  <Card
+                    onClick={() => pickCard(card)}
+                    card={{
+                      ...card,
+                      health: card.lifespan,
+                      turnCount: 0,
+                      boughtFor: cardPrice,
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

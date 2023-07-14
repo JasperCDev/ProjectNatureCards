@@ -1,6 +1,7 @@
 import { Sword } from "lucide-react";
 import { useStoreActions, useStoreState } from "../stores/store";
 import CardsInHand from "./CardsInHand";
+import PlayerCurrency from "./PlayerCurrency";
 
 export default function RightColumn() {
   const playerAction = useStoreState((state) => state.playerAction);
@@ -24,6 +25,7 @@ export default function RightColumn() {
         }}
         onClick={handleSwordClick}
       />
+      <PlayerCurrency />
     </div>
   );
 }
